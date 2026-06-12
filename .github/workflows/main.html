@@ -17,7 +17,6 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-        /* 隐藏滚动条但保持功能 */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -118,7 +117,7 @@
                     <div class="flex justify-between items-center text-xs text-blue-500 mt-6 pt-4 border-t border-slate-100">
                         <button @click="requestPasswordReset" class="hover:underline text-red-500 font-semibold">申请重置密码为 123456</button>
                         <a href="#register" @click="navigateTo('register')" class="hover:underline font-bold text-blue-600 flex items-center gap-1">
-                            新用户注册 <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            注册新账号 <i class="fa-solid fa-arrow-right-to-bracket"></i>
                         </a>
                     </div>
                 </div>
@@ -235,7 +234,7 @@
 
                 <!-- 右边栏 (12列中占7列) -->
                 <div class="lg:col-span-7 space-y-6">
-                    <!-- 右上：家长提问 (老师端隐藏，优秀作业模块将放大填满) -->
+                    <!-- 右上：家长提问 (老师端隐藏) -->
                     <div v-if="currentUser.role !== 'teacher'" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-t-4 border-t-yellow-500 transition-all hover:shadow-md">
                         <h2 class="text-lg font-black mb-3 flex items-center gap-2 text-slate-800">
                             <i class="fa-solid fa-circle-question text-yellow-500"></i> 家长提问
@@ -346,7 +345,13 @@
                         </div>
                         <div class="flex justify-between items-center text-xs text-slate-400 pt-3 border-t border-slate-100/50 mt-2">
                             <span>推荐班级：{{ item.class }}</span>
-                            <span class="text-purple-600 font-bold hover:underline flex items-center gap-1">查看大图与评语 &rarr;</span>
+                            <div class="flex items-center space-x-3">
+                                <!-- 教师端独有：删除优秀作业按钮 -->
+                                <button v-if="currentUser.role === 'teacher'" @click.stop="deletePerfectHomework(item.id)" class="bg-red-500 hover:bg-red-600 text-white font-extrabold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> 删除优秀作业
+                                </button>
+                                <span class="text-purple-600 font-bold hover:underline flex items-center gap-1">查看大图与评语 &rarr;</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -360,9 +365,15 @@
 
         <!-- ==================== 页面：优秀作业细节页 (xxx/perfecthomework/id) ==================== -->
         <div v-if="currentPath.startsWith('perfecthomework')" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-100 mt-6">
-            <button @click="navigateTo('perfect')" class="text-blue-500 mb-6 inline-block hover:underline font-bold text-sm">
-                <i class="fa-solid fa-arrow-left"></i> 返回优秀作业展
-            </button>
+            <div class="flex justify-between items-center mb-6">
+                <button @click="navigateTo('perfect')" class="text-blue-500 inline-block hover:underline font-bold text-sm">
+                    <i class="fa-solid fa-arrow-left"></i> 返回优秀作业展
+                </button>
+                <!-- 详情页老师也可以进行快速彻底删除 -->
+                <button v-if="currentUser.role === 'teacher' && currentPerfectItem" @click="deletePerfectHomework(currentPerfectItem.id)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-trash-can"></i> 彻底删除此作业
+                </button>
+            </div>
             
             <div v-if="currentPerfectItem" class="space-y-6">
                 <div class="border-b pb-4">
@@ -432,7 +443,7 @@
                                         <strong>疑问点:</strong> {{ hw.question }}
                                     </div>
                                     <div class="mb-3">
-                                        <img :src="hw.image" class="h-24 w-full object-cover rounded-lg border">
+                                        <img :src="hw.image" class="h-24 w-full object-cover rounded-lg border animate-pulse-slow">
                                     </div>
                                 </div>
                                 
@@ -642,20 +653,17 @@ createApp({
         const currentPath = ref('login');
         const isLoggedIn = ref(false);
         
-        // 全量模拟用户库
+        // 全量模拟用户库 (无除了valor以外的学生)
         const users = ref([
-            { uid: 1, nickname: 'valor', realName: 'valor', role: 'teacher', class: '教师组', password: '12101130' },
-            { uid: 2, nickname: '小明', realName: '张小明', role: 'student', class: '3年级2班', password: '123' },
-            { uid: 3, nickname: '小红', realName: '李小红', role: 'student', class: '3年级2班', password: '123' },
-            { uid: 4, nickname: '小华', realName: '王小华', role: 'student', class: '4年级1班', password: '123' }
+            // UID=1 默认为 valor，初始状态为学生
+            { uid: 1, nickname: 'valor', realName: 'valor', role: 'student', class: '3年级1班', password: '12101130' },
+            // 预设一个教学账号王老师，方便测试管理后台功能
+            { uid: 2, nickname: '王老师', realName: '王老师', role: 'teacher', class: '教师组', password: '123' }
         ]);
 
-        // 全量提报作业数据库
+        // 作业提报模拟数据库
         const homeworkList = ref([
-            { id: '1', studentId: 2, studentName: '小明', class: '3年级2班', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80', desc: '今天认真复习了第一章代数方程，并完成了对应练习题。', date: '2023-11-01', grade: 4.8, comment: '解题过程严丝合缝，书写令人赏心悦目，堪称范本！', question: '' },
-            { id: '2', studentId: 3, studentName: '小红', class: '3年级2班', image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=400&q=80', desc: '英语抄写第三页生词任务，发音自我感觉有提升。', date: '2023-11-02', grade: 4.5, comment: '书写流利工整，没有语法细节错漏，做得好。', question: '' },
-            { id: '3', studentId: 2, studentName: '小明', class: '3年级2班', image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80', desc: '物理受力分析大题归纳。', date: '2023-11-05', grade: 4.2, comment: '受力分析图很标准，只是重力方向标注偶尔有偏差。', question: '请问老师在光滑斜面上压力该如何作图？' },
-            { id: '4', studentId: 4, studentName: '小华', class: '4年级1班', image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80', desc: '阅读理解习题作答汇报。', date: '2023-11-06', grade: 3.5, comment: '理解程度稍显不足，回答没有切中得分要点，多加油！', question: '请问答案怎么组织？' }
+            { id: '1', studentId: 1, studentName: 'valor', class: '3年级1班', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80', desc: '今天认真复习了第一章代数方程，并完成了对应练习题。', date: '2023-11-01', grade: 4.8, comment: '解题过程非常严密，步骤清晰。', question: '最后一题用二分法对吗？' }
         ]);
 
         // 系统公告
@@ -729,7 +737,7 @@ createApp({
                 : 'hover:bg-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold transition';
         };
 
-        // 优秀作业集合过滤 (>= 4)
+        // 优秀作业集合过滤 (评分 >= 4.0)
         const perfectHomeworkList = computed(() => {
             return homeworkList.value.filter(item => item.grade >= 4.0);
         });
@@ -774,6 +782,15 @@ createApp({
             }
             return null;
         });
+
+        // 教师删除优秀作业功能 (彻底从列表中删除该作业记录)
+        const deletePerfectHomework = (id) => {
+            if (confirm('确定要将该作业从优秀作业荣誉墙中彻底删除吗？')) {
+                homeworkList.value = homeworkList.value.filter(item => item.id !== id);
+                alert('该优秀作业已成功删除！');
+                navigateTo('perfect');
+            }
+        };
 
         // 我的优秀作业过滤展示
         const myPerfectHomeworks = computed(() => {
@@ -845,7 +862,7 @@ createApp({
             };
 
             homeworkList.value.unshift(dataNode);
-            alert('作业已成功通过本地模拟系统上传，数据同步保存在内存模拟库！');
+            alert('作业提交成功，已同步保存在内存模拟库！');
             
             if (type === 'quick') {
                 quickSubmit.value = { desc: '', image: null, preview: null };
@@ -855,23 +872,25 @@ createApp({
             }
         };
 
-        // 提问交互
+        // 家长提问交互
         const submitQuestion = () => {
             if (!parentQuestion.value.trim()) {
                 alert('请不要发送空疑问！');
                 return;
             }
-            alert(`问题："${parentQuestion.value}" 提交成功，系统已自动封装请求并推至 GitHub 远程同步仓库！`);
+            alert(`问题："${parentQuestion.value}" 提交成功，系统已自动封装请求并同步至 GitHub 仓库！`);
             parentQuestion.value = '';
         };
 
         // 用户验证逻辑
         const handleLogin = () => {
-            // 特殊账号校验密码
+            // 特殊账号校验，对应 UID=1
             if (loginForm.value.nickname === '1234ZMXZJD' && loginForm.value.password === '12101130') {
-                currentUser.value = { uid: 1, nickname: 'valor', realName: 'valor', role: 'teacher', class: '教师组' };
+                // 读取此时 users 库中 UID=1 的当前属性（方便测试更改角色后的 valor）
+                const valorAcct = users.value.find(u => u.uid === 1);
+                currentUser.value = { ...valorAcct };
                 isLoggedIn.value = true;
-                alert('登录成功！欢迎回来，管理员 valor 老师。');
+                alert(`登录成功！欢迎回来，valor (${roleText(currentUser.value.role)})`);
                 navigateTo('home');
                 return;
             }
@@ -1008,10 +1027,11 @@ createApp({
             return users.value.filter(u => u.realName.includes(token) || (u.class && u.class.includes(token)));
         });
 
+        // 销户删除控制（只有 UID=1 的账号拥有删除老师的最高安全权限）
         const deleteUser = (usr) => {
             if (usr.role === 'teacher') {
                 if (currentUser.value.uid !== 1) {
-                    alert('安全阻断：仅超管账户 (valor，UID=1) 才有销户老师账号权限！');
+                    alert('安全权限拒绝：只有超级账号 (valor, UID=1) 才可以删除老师账号！');
                     return;
                 }
             }
@@ -1064,7 +1084,7 @@ createApp({
         });
 
         const toggleNotification = () => {
-            alert('您有一条未读信息：您上次提交的物理作业反馈出色，老师推荐加入了本周优秀作业墙展示，快去看看吧！');
+            alert('您有一条未读信息：您提交的作业反馈出色，已被老师推荐加入了本周优秀作业荣誉墙展示，快去看看吧！');
             hasMessage.value = false;
         };
 
@@ -1100,6 +1120,7 @@ createApp({
             prevSlide,
             goToPerfectDetail,
             currentPerfectItem,
+            deletePerfectHomework,
             myPerfectHomeworks,
             visibleMyPerfectHomework,
             nextMySlide,
