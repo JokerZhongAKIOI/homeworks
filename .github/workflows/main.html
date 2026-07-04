@@ -139,16 +139,16 @@
                         <input v-model="registerForm.realName" type="text" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="输入真实姓名">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">昵称</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">昵称（必须非真实）</label>
                         <input v-model="registerForm.nickname" type="text" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="输入系统昵称">
                     </div>
                     
-                    <!-- 班级选项 (年级 1-9 + 班级 1-99) -->
+                    <!-- 班级选项 (年级 1-12 + 班级 1-99) -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">所属年级 (1-9)</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">所属年级 (1-12)</label>
                             <select v-model="registerForm.grade" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                                <option v-for="g in 9" :key="g" :value="g">{{ g }}年级</option>
+                                <option v-for="g in 12" :key="g" :value="g">{{ g }}年级</option>
                             </select>
                         </div>
                         <div>
@@ -645,17 +645,11 @@ createApp({
         // 全量模拟用户库
         const users = ref([
             { uid: 1, nickname: 'valor', realName: 'valor', role: 'teacher', class: '教师组', password: '12101130' },
-            { uid: 2, nickname: '小明', realName: '张小明', role: 'student', class: '3年级2班', password: '123' },
-            { uid: 3, nickname: '小红', realName: '李小红', role: 'student', class: '3年级2班', password: '123' },
-            { uid: 4, nickname: '小华', realName: '王小华', role: 'student', class: '4年级1班', password: '123' }
         ]);
 
         // 全量提报作业数据库
         const homeworkList = ref([
-            { id: '1', studentId: 2, studentName: '小明', class: '3年级2班', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80', desc: '今天认真复习了第一章代数方程，并完成了对应练习题。', date: '2023-11-01', grade: 4.8, comment: '解题过程严丝合缝，书写令人赏心悦目，堪称范本！', question: '' },
-            { id: '2', studentId: 3, studentName: '小红', class: '3年级2班', image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=400&q=80', desc: '英语抄写第三页生词任务，发音自我感觉有提升。', date: '2023-11-02', grade: 4.5, comment: '书写流利工整，没有语法细节错漏，做得好。', question: '' },
-            { id: '3', studentId: 2, studentName: '小明', class: '3年级2班', image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80', desc: '物理受力分析大题归纳。', date: '2023-11-05', grade: 4.2, comment: '受力分析图很标准，只是重力方向标注偶尔有偏差。', question: '请问老师在光滑斜面上压力该如何作图？' },
-            { id: '4', studentId: 4, studentName: '小华', class: '4年级1班', image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80', desc: '阅读理解习题作答汇报。', date: '2023-11-06', grade: 3.5, comment: '理解程度稍显不足，回答没有切中得分要点，多加油！', question: '请问答案怎么组织？' }
+            
         ]);
 
         // 系统公告
