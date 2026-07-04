@@ -139,16 +139,16 @@
                         <input v-model="registerForm.realName" type="text" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="输入真实姓名">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">昵称</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">昵称（必须非真实）</label>
                         <input v-model="registerForm.nickname" type="text" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="输入系统昵称">
                     </div>
                     
-                    <!-- 班级选项 (年级 1-9 + 班级 1-99) -->
+                    <!-- 班级选项 (年级 1-12 + 班级 1-99) -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">所属年级 (1-9)</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">所属年级 (1-12)</label>
                             <select v-model="registerForm.grade" class="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                                <option v-for="g in 9" :key="g" :value="g">{{ g }}年级</option>
+                                <option v-for="g in 12" :key="g" :value="g">{{ g }}年级</option>
                             </select>
                         </div>
                         <div>
